@@ -34,4 +34,3 @@ appointmentsRouter.post('/', async (request, response) => {
 });
 
 export default appointmentsRouter;
-// 10:13
