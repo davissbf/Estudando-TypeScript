@@ -1,23 +1,21 @@
-import { getRepository } from 'typeorm';
 import { hash } from 'bcryptjs';
 
 import AppError from '@shared/errors/AppError';
+import IUsersRepository from '../repositories/IUsersRepository';
 
 import User from '../infra/typeorm/entities/User';
 
-interface Request {
+interface IRequest {
   name: 'string';
   email: 'string';
   password: 'string';
 }
 
 class CreateUserService {
-  public async execute({ name, email, password }: Request): Promise<User> {
-    const usersRpository = getRepository(User);
+  constructor(private usersRpository: IUsersRepository) {}
 
-    const checkUserExists = await usersRpository.findOne({
-      where: { email },
-    });
+  public async execute({ name, email, password }: IRequest): Promise<User> {
+    const checkUserExists = await this.usersRpository.findByEmail(email);
 
     if (checkUserExists) {
       throw new AppError('Email adders alredy used.');
@@ -25,13 +23,11 @@ class CreateUserService {
 
     const hashedPassword = await hash(password, 8);
 
-    const user = usersRpository.create({
+    const user = await this.usersRpository.create({
       name,
       email,
       password: hashedPassword,
     });
-
-    await usersRpository.save(user);
 
     return user;
   }
